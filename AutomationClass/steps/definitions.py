@@ -3,13 +3,13 @@ from selenium import webdriver
 from time import sleep
 
 
-@step('Navigate to Google')
-def test(context):
-    driver = webdriver.Chrome("C:/Python39/Scripts/chromedriver.exe")   # path for windows #
-    driver.get("https://www.google.com/")
-    print("Navigate OK")
-
-
+# @step('Navigate to Google')
+# def test(context):
+#     driver = webdriver.Chrome("C:/Python39/Scripts/chromedriver.exe")   # path for windows #
+#     driver.get("https://www.google.com/")
+#     print("Navigate OK")
+#
+#
 @step('Open eBay.com')
 def some_test_imp(context):
     context.browser = webdriver.Chrome()
@@ -279,7 +279,7 @@ def open_ebay(context):
     print("Open eBay.com OK")
 
 
-@step('Search for dress^#$%123')
+@step('Search for "dress234#$%"')
 def search_smth(context):
     search_inpt = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
     search_inpt.send_keys("dress^#$%123")
@@ -287,7 +287,7 @@ def search_smth(context):
     print("Search OK")
 
 
-@step('Search for dress^#$%123')
+@step('Click Search')
 def click_search(context):
     search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
     search_btn.click()

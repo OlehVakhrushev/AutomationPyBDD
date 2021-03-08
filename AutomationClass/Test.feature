@@ -48,7 +48,7 @@ Feature: Regression for Ebay
 
   Scenario: Use search with num, str, spec characters
     Given Open eBay.com
-    And Search for dress^#$%123
+    And Search for "dress234#$%"
     And Click Search
     Then Show results
 
