@@ -3,13 +3,13 @@ from selenium import webdriver
 from time import sleep
 
 
+
 # @step('Navigate to Google')
 # def test(context):
 #     driver = webdriver.Chrome("C:/Python39/Scripts/chromedriver.exe")   # path for windows #
 #     driver.get("https://www.google.com/")
 #     print("Navigate OK")
-#
-#
+
 @step('Open eBay.com')
 def some_test_imp(context):
     context.browser = webdriver.Chrome()
@@ -32,15 +32,13 @@ def click_the_search_btn(context):
     print("Click the Search button OK")
 
 
-# @step('All items are somewhat dress related')
-# def verify_search_result(context):
-#     item = context.browser.find_element_by_xpath("//h3[text()='Women Ladies Long Maxi Dress Boho Holiday Beach Party Cocktail Summer Sundress']")
+@step('Close browser')
+def close_browser(context):
+    context.browser.close()
 
 
-@step('Go to shopping cart')
+@step('Navigate to shopping cart')
 def verify_shopping_cart(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
     cart = context.browser.find_element_by_xpath("//a[@title='Your shopping cart']")
     cart.click()
     cart_title = context.browser.find_element_by_xpath("//h1[text()='Shopping cart']").text
@@ -49,56 +47,45 @@ def verify_shopping_cart(context):
     print("Cart OK")
 
 
-@step('Go to Sell')
-def verify_sell(context):
-    context.browser.get("https://www.ebay.com/")
-    sell = context.browser.find_element_by_xpath("//li[@id='gh-p-2']")
-    sell.click()
-    sell_title = context.browser.find_element_by_xpath("//h1[@class='home-pagetitle']").text
-    assert 'Selling' == sell_title
-    sleep(2)
-    print("Sell OK")
-
-
-@step('Go to Help & Contact')
-def verify_help(context):
-    context.browser.get("https://www.ebay.com/")
-    help = context.browser.find_element_by_xpath("//a[text()=' Help & Contact']")
-    help.click()
-    help_title = context.browser.find_element_by_xpath("//button[text()='Help']").text
-    assert "Help" == help_title
-    sleep(2)
-    print("Help OK")
-
-
-@step('Go to Brand Outlet')
-def verify_brand_outlet(context):
-    context.browser.get("https://www.ebay.com/")
+@step('Verify that "{name_of_header_element}" is visible on the page')
+def header_element_sell(context, name_of_header_element):
     context.browser.maximize_window()
-    brand = context.browser.find_element_by_xpath("//a[text()=' Brand Outlet']")
-    brand.click()
-    brand_title = context.browser.find_element_by_xpath("//span[text()='The Brand Outlet']").text
-    assert "The Brand Outlet" == brand_title
+    header_sell = context.browser.find_element_by_xpath(f"//a[@class='gh-p' and contains(text(), '{name_of_header_element}')]")
+
+
+@step('Click "{action_of_header_element}" header element')
+def click_header_sell(context, action_of_header_element):
+    header_sell_action = context.browser.find_element_by_xpath(f"//a[@class='gh-p' and contains(text(), '{action_of_header_element}')]")
     sleep(2)
-    print("Brand OK")
+    header_sell_action.click()
 
 
-@step('Go to Daily Deals')
-def verify_daily_deals(context):
-    context.browser.get("https://www.ebay.com/")
-    deals = context.browser.find_element_by_xpath("//a[text()=' Daily Deals']")
-    deals.click()
-    deals_title = context.browser.find_element_by_xpath("//a[text()='Deals']").text
-    assert "Deals" == deals_title
+@step('User is redirected to "Sell" page')
+def open_sell_page(context):
+    sell_open = context.browser.find_element_by_xpath("//h1[@class = 'home-pagetitle']").text
+    print(f"{sell_open}")
     sleep(2)
-    print("Deals OK")
 
 
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
+@step('User is redirected to "Help & Contact" page')
+def open_help_page(context):
+    help_open = context.browser.find_element_by_xpath("//td[@id = 'gh-title']").text
+    print(f"{help_open}")
+    sleep(2)
+
+
+@step('User is navigated to "Brand Outlet"')
+def open_brand_page(context):
+    brand_title = context.browser.find_element_by_xpath("//span[@class='b-pageheader__text']").text
+    print(f"{brand_title}")
+    sleep(2)
+
+
+@step('User is redirected to "Daily Deals"')
+def open_deals_page(context):
+    deals_title = context.browser.find_element_by_xpath("//a[text() = 'Deals']").text
+    print(f"{deals_title}")
+    sleep(2)
 
 
 @step('Click Sign In')
@@ -149,13 +136,6 @@ def verify_fail(context):
     print("Verify fail OK")
 
 
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
-
-
 @step('Search {search_product} product')
 def search_toy(context, search_product):
     search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
@@ -179,12 +159,6 @@ def show_price(context):
     print(f"Show price of first product OK and {price}")
 
 
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
-
 
 @step('Search for "dress123"')
 def search_smth(context):
@@ -194,27 +168,12 @@ def search_smth(context):
     print("Search OK")
 
 
-@step('Click Search')
-def click_search(context):
-    search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
-    search_btn.click()
-    sleep(2)
-    print("Click Search OK")
-
-
 @step('Show results')
 def show_res(context):
     res = context.browser.find_element_by_xpath("//h1[@class='srp-controls__count-heading']").text
     print(f"{res}  <=== Here is your results")
     sleep(2)
     print("Show results OK")
-
-
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
 
 
 @step('Search for "dress123%^&&"')
@@ -225,89 +184,12 @@ def search_smth(context):
     print("Search OK")
 
 
-@step('Click Search')
-def click_search(context):
-    search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
-    search_btn.click()
-    sleep(2)
-    print("Click Search OK")
-
-
-@step('Show results')
-def show_res(context):
-    res = context.browser.find_element_by_xpath("//h1[@class='srp-controls__count-heading']").text
-    print(f"{res}  <=== Here is your results")
-    sleep(2)
-    print("Show results OK")
-
-
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
-
-
 @step('Search for 123')
 def search_smth(context):
     search_inpt = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
     search_inpt.send_keys("123")
     sleep(2)
     print("Search OK")
-
-
-@step('Click Search')
-def click_search(context):
-    search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
-    search_btn.click()
-    sleep(2)
-    print("Click Search OK")
-
-
-@step('Show results')
-def show_res(context):
-    res = context.browser.find_element_by_xpath("//h1[@class='srp-controls__count-heading']").text
-    print(f"{res}  <=== Here is your results")
-    sleep(2)
-    print("Show results OK")
-
-
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
-
-
-@step('Search for "dress234#$%"')
-def search_smth(context):
-    search_inpt = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
-    search_inpt.send_keys("dress^#$%123")
-    sleep(2)
-    print("Search OK")
-
-
-@step('Click Search')
-def click_search(context):
-    search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
-    search_btn.click()
-    sleep(2)
-    print("Click Search OK")
-
-
-@step('Show results')
-def show_res(context):
-    res = context.browser.find_element_by_xpath("//h1[@class='srp-controls__count-heading']").text
-    print(f"{res}  <=== Here is your results")
-    sleep(2)
-    print("Show results OK")
-
-
-@step('Open eBay.com')
-def open_ebay(context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://www.ebay.com/")
-    print("Open eBay.com OK")
 
 
 @step('Search for " "')
@@ -318,17 +200,27 @@ def search_smth(context):
     print("Search OK")
 
 
-@step('Click Search')
-def click_search(context):
-    search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
-    search_btn.click()
-    sleep(2)
-    print("Click Search OK")
-
-
-@step('Show results')
+@step('Show results errors')
 def show_res(context):
     res_error = context.browser.find_element_by_xpath("//div[@class='s-message__content']").text
     print(f"{res_error}  <=== Here is your error result with space search")
     sleep(2)
     print("Show results OK")
+
+
+@step('Search for Iphone 11')
+def show_iphone_deals(context, search_product):
+    search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
+    search.send_keys("{}".format(search_product))
+    sleep(5)
+
+
+@step('Show all results with Free shipping, Free returns')
+def show_res(context):
+    results = context.browser.find_elements_by_xpath("//li[@class = 's-item    '][.//span[text()='Free shipping']][.//span[text() = 'Free returns']][.//span[text() = 'Buy It Now']]//h3")
+    count = len(results) + 1
+    print("*****")
+    print(f"{results}")
+    print(f"{count}")
+    print("*****")
+
