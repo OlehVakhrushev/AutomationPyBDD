@@ -220,7 +220,27 @@ def show_res(context):
     results = context.browser.find_elements_by_xpath("//li[@class = 's-item    '][.//span[text()='Free shipping']][.//span[text() = 'Free returns']][.//span[text() = 'Buy It Now']]//h3")
     count = len(results) + 1
     print("*****")
-    print(f"{results}")
     print(f"{count}")
     print("*****")
 
+
+@step('Show all results with Free 3 day shipping')
+def show_res(context):
+    results = context.browser.find_elements_by_xpath("//li[@class='s-item     '][.//div[@class='s-item__info clearfix'][.//span[@class='POSITIVE BOLD' and text()='Free 3 day shipping']]]")
+    count = len(results) + 1
+    print("*****")
+    print(f"{count}")
+    print("*****")
+
+
+@step('Check if results is 10')
+def show_res(context):
+    results = context.browser.find_elements_by_xpath("//li[@class='s-item     '][.//div[@class='s-item__info clearfix'][.//span[@class='POSITIVE BOLD' and text()='Free 3 day shipping']]]")
+    count = len(results)
+    print("*****")
+    print(f"{count}")
+    print("*****")
+    if count != 10:
+        raise ValueError(f'Oleh, we have a problem: \n\n We missing good deal for Iphone 11')
+    else:
+        print("We good")

@@ -96,10 +96,25 @@ Feature: Regression for Ebay
     Given Open eBay.com
     And Search Iphone 11 product
     And Click Search
-    And Show all results with Free shipping, Free returns
-#    And Show all result with Free 3 day shipping  //$x("//li[@class = 's-item    '][.//span[text()='Free 3 day shipping']]")
+    Then Show all results with Free shipping, Free returns
+
+  @btv
+  Scenario: 10: Search for Iphone 11 with Free 3 day shipping
+    Given Open eBay.com
+    And Search Iphone 11 product
+    And Click Search
+    Then Show all results with Free 3 day shipping
+
+  @btv
+  Scenario: 11: Search for Iphone 11 with Free 4 day shipping
 #    And Show all results with Free 4 day shipping
 #    And Show all results 60 Day Warranty and Charger Included
 #    And Show all results with Free returns, Free 3 day shipping, 60 Day Warranty and Charger Included
+  @bvt
+  Scenario: 12: Check if is 20 results of Iphone 11 with Free shipping and Free returns
+    Given Open eBay.com
+    And Search Iphone 11 product
+    And Click Search
+    Then Check if results is 10
 
 
