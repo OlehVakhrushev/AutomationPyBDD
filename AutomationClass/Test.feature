@@ -117,4 +117,14 @@ Feature: Regression for Ebay
     And Click Search
     Then Check if results is 10
 
-
+  @btv
+  Scenario Outline: 13: Verify that elements are search related on pages
+    Given Open eBay.com
+    And In search bar type "<search_product>" from the keyboard
+    And Click Search
+    Then Verify that search results are relevant to "<search_product>" on the all pages of the search
+    Examples:
+      | search_product |
+      | Iphone 11      |
+      | dress          |
+      | shoes          |

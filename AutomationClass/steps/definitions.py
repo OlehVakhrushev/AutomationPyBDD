@@ -1,7 +1,7 @@
 from behave import step
 from selenium import webdriver
 from time import sleep
-
+from selenium.webdriver.common.keys import Keys
 
 
 # @step('Navigate to Google')
@@ -9,6 +9,8 @@ from time import sleep
 #     driver = webdriver.Chrome("C:/Python39/Scripts/chromedriver.exe")   # path for windows #
 #     driver.get("https://www.google.com/")
 #     print("Navigate OK")
+
+
 
 @step('Open eBay.com')
 def some_test_imp(context):
@@ -208,11 +210,23 @@ def show_res(context):
     print("Show results OK")
 
 
-@step('Search for Iphone 11')
-def show_iphone_deals(context, search_product):
-    search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
-    search.send_keys("{}".format(search_product))
-    sleep(5)
+# @step('Search for "{search_product}"')
+# def show_iphone_deals(context, search_product):
+#     search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
+#     search.send_keys(f"{search_product}", Keys.ENTER)
+#     sleep(5)
+
+
+@step('In search bar type "{search_product}" from the keyboard')
+def pr_enter(context, search_product):
+    press_enter = context.browser.find_element_by_xpath(
+        "//div[@id = 'gh-ac-box2']/input[@class = 'gh-tb ui-autocomplete-input']")
+
+    if not press_enter:
+        raise ValueError("Search bar is not located")
+    else:
+        press_enter.send_keys(f"{search_product}", Keys.ENTER)
+        sleep(5)
 
 
 @step('Show all results with Free shipping, Free returns')
@@ -244,3 +258,77 @@ def show_res(context):
         raise ValueError(f'Oleh, we have a problem: \n\n We missing good deal for Iphone 11')
     else:
         print("We good")
+
+
+# @step('Verify that results are related to "{search_product}" on 20 pages')
+# def verify_relevant_results(context, search_product):
+#     result_items = context.browser.find_elements_by_xpath("//li[contains(@class,'s-item')]//h3")
+#     fails = []
+#     for each_item in result_items:
+#         if search_product.lower() not in each_item.lower():
+#             fails.append(each_item.text)
+#     if fails:
+#         print(fails)
+#         raise ValueError(f"Some items are not {search_product} related")
+#
+#
+# def verify_relevant_results_on_pages(context, search_product, pages):
+#     max_page = int(pages)
+#     current_page = 1
+#     while current_page < max_page:
+#         verify_relevant_results(context, search_product)
+#         current_page = click_next_page(context.browser)
+#
+#
+# def click_next_page(browser):
+#     next_page = browser.find_element_by_xpath("//div[@class='s-pagination']//a[@type='next']")
+#     next_page.click()
+#     current_page_item = browser.find_element_by_xpath("//div[@class='s-pagination']//a[@aria-current='page']")
+#     page_number = int(current_page_item.text)
+#     return page_number
+
+
+# @step('Verify that results are related to "{search_product}" on 20 pages')
+# def verify_relevant_results(context, search_product):
+#     pages = context.browser.find_elements_by_xpath("//a[@class='pagination__item']")
+#     number = len(pages)
+#     items = context.browser.find_elements_by_xpath("//li[contains(@class,'s-item')]//h3")
+#     for page in range(1, 40):
+#         sleep(4)
+#         page.click()
+#         context.browser.find_elements_by_xpath(f"//a[@class='pagination__item' anf text()='{page}']").click()
+#         sleep(4)
+#
+#         fails = []
+#         for each_item in items:
+#             if search_product.lower() not in each_item.text:
+#                 fails.append(each_item.text)
+#
+#         if fails:
+#             number=len(fails)
+#             print(number)
+#             print(fails)
+#             raise ValueError(f'Some products are not {search_product} related')
+
+
+@step('Verify that search results are relevant to "{name_of_search_keyword}" on the all pages of the search')
+def verification_of_search_results(context, name_of_search_keyword):
+    ver_of_search = context.browser.find_elements_by_xpath("//li[starts-wth[@class = 's-item']//h3]")
+    next_page_result = context.browser.find_elements_by_xpath("//a[@class = 'pagination__next']")
+    fails = []
+    while ver_of_search:
+        ver_item = ver_of_search[0]
+        if name_of_search_keyword.lower() not in ver_item.text.lower():
+            fails.append(ver_item.text)
+            ver_of_search.delete(0)
+        if fails:
+            raise ValueError(f'Some of items are not "{name_of_search_keyword}" related')
+
+    while next_page_result: # Till the end
+        next_page_button_disable = context.browser.find_elements_by_xpath("//a[@class = 'pagination__next' and @aria-disabled = 'true']")
+        if next_page_button_disable:
+            break
+        for page in next_page_result:
+            page.click()
+            sleep(1)
+            next_page_result = context.browser.find_elements_by_xpath("//a[@class = 'pagination__next']")
