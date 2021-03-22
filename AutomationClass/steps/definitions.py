@@ -15,6 +15,7 @@ from selenium.webdriver.common.keys import Keys
 @step('Open eBay.com')
 def some_test_imp(context):
     context.browser = webdriver.Chrome()
+    context.browser.maximize_window()
     context.browser.get("https://www.ebay.com/")
     print("Open eBay.com OK")
 
@@ -332,3 +333,19 @@ def verification_of_search_results(context, name_of_search_keyword):
             page.click()
             sleep(1)
             next_page_result = context.browser.find_elements_by_xpath("//a[@class = 'pagination__next']")
+
+
+@step('Filter "{search_product}" by "{filter_header}" in category "{filter_option}"')
+def filter_checker(context, search_product, filter_header, filter_option):
+    desired_ckbx = context.browser.find_elements_by_xpath(f"//li[@class='x-refine__main__list '][.//h3[text()='{filter_header}']]"
+                                                          f"//div[@class='x-refine__select__svg'][.//span[text()='{filter_option}']]//input")
+
+    if not desired_ckbx:
+        raise ValueError(f'No {search_product} filtered by {filter_header} in {filter_option}')
+    desired_ckbx[0].click()
+    sleep(5)
+    print("Now we can check it again")
+    if desired_ckbx:
+        print(f"Now {search_product} is {filter_header} by {filter_option}")
+    sleep(2)
+    context.browser.close()

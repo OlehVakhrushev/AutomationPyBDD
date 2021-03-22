@@ -128,3 +128,18 @@ Feature: Regression for Ebay
       | Iphone 11      |
       | dress          |
       | shoes          |
+    
+    
+  @btv
+  Scenario Outline: 14: Verify that filter is active
+    Given Open eBay.com
+    And In search bar type "<search_product>" from the keyboard
+    And Click Search
+    Then Filter "<search_product>" by "<filter_header>" in category "<filter_option>"
+    Examples:
+      | search_product |  filter_header    |  filter_option |
+      | dress          |  Dress Length     |  Short         |
+      | shoes          |  Brand            |  adidas        |
+      | Iphone 11      |  Network          |  Sprint        |
+      | books          |  Format           |  Board Book    |
+      | oil            |  Originality      |  Original      |
