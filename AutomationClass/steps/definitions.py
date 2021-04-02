@@ -2,6 +2,9 @@ from behave import step
 from selenium import webdriver
 from time import sleep
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 
 # @step('Navigate to Google')
@@ -141,17 +144,27 @@ def verify_fail(context):
 
 @step('Search {search_product} product')
 def search_toy(context, search_product):
-    search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
-    search.send_keys("{}".format(search_product))
-    sleep(2)
+    # search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
+    # search.send_keys("{}".format(search_product))
+    # sleep(2)
+    search = WebDriverWait(context.browser, 5).until(EC.presence_of_element_located
+                                                     ((By.XPATH, "//input[@id='gh-ac']")),
+                                                     message= "Item not found")
+    # search.send_keys("{}".format(search_product))
+    if not search:
+        raise ValueError("Search bar is not located")
+    else:
+        search.send_keys(f"{search_product}")
     print("Search product OK")
 
 
 @step('Click Search')
 def click_search(context):
-    search_btn = context.browser.find_element_by_xpath("//input[@id='gh-btn']")
+    search_btn = WebDriverWait(context.browser, 5).until(EC.presence_of_element_located
+                                                         ((By.XPATH, "//input[@type = 'submit' and @id = 'gh-btn']")),
+                                                         message="Search button not found")
     search_btn.click()
-    sleep(2)
+    # sleep(2)
     print("Click Search OK")
 
 
@@ -160,7 +173,6 @@ def show_price(context):
     price = context.browser.find_element_by_xpath("//span[@class='s-item__price']").text
     sleep(3)
     print(f"Show price of first product OK and {price}")
-
 
 
 @step('Search for "dress123"')
@@ -211,17 +223,11 @@ def show_res(context):
     print("Show results OK")
 
 
-# @step('Search for "{search_product}"')
-# def show_iphone_deals(context, search_product):
-#     search = context.browser.find_element_by_xpath("//input[@id='gh-ac']")
-#     search.send_keys(f"{search_product}", Keys.ENTER)
-#     sleep(5)
-
-
 @step('In search bar type "{search_product}" from the keyboard')
 def pr_enter(context, search_product):
-    press_enter = context.browser.find_element_by_xpath(
-        "//div[@id = 'gh-ac-box2']/input[@class = 'gh-tb ui-autocomplete-input']")
+    press_enter = WebDriverWait(context.browser, 5).until(EC.presence_of_element_located
+                                                          ((By.XPATH, "//div[@id = 'gh-ac-box2']/input[@class = 'gh-tb ui-autocomplete-input']")),
+                                                          message= "Item not found")
 
     if not press_enter:
         raise ValueError("Search bar is not located")
@@ -349,3 +355,215 @@ def filter_checker(context, search_product, filter_header, filter_option):
         print(f"Now {search_product} is {filter_header} by {filter_option}")
     sleep(2)
     context.browser.close()
+
+
+@step('Select filters')
+def select_mult_filters(context):
+
+    for filter in context.table.rows:
+        header = filter['Filter']
+        chbx_label = filter['Value']
+
+        desired_title = context.browser.find_elements_by_xpath(f"//li[@class='x-refine__main__list '][.//h3[text()='{header}']]//div[@class='x-refine__item--toggle']")
+        if not desired_title:
+            raise ValueError(f"Bug! \n No title related to the {header}")
+        if desired_title[0].get_attribute('aria-expanded') == 'false':
+            desired_title[0].click()
+
+        desired_chbx = context.browser.find_elements_by_xpath(
+                        f"//li[@class = 'x-refine__main__list ']"
+                        f"[.//h3[text() = '{header}']]//div[@class = 'x-refine__select__svg']"
+                        f"//input[@aria-label='{chbx_label}']")
+        if not desired_chbx:
+            raise ValueError(f'No filter by label{chbx_label} in category {header}')
+        desired_chbx[0].click()
+        sleep(2)
+
+
+@step('Validate what all item are related to following filters')
+def check_filters(context):
+    desired_specs = {}
+    mismatches = []
+    current_window = context.browser.current_window_handle
+
+    result_item = context.browser.find_elements_by_xpath("//li[contains(@class,'s-item      ')]")
+    cleared_list = []
+    for item in result_item:
+        link = item.find_element_by_xpath("descendant::a").get_attribute("href")
+        title = item.find_element_by_xpath("descendant::h3").text
+        item_specs = (link, title)
+        cleared_list.append(item_specs)
+
+    for link, title in cleared_list:
+        context.browser.execute_script(f'window.open("{link}", "_blank");')
+        sleep(2)
+
+        # switch
+        context.browser.switch_to.window(context.browser.window_handles[-1])
+        # validation
+
+        labels = context.browser.find_elements_by_xpath("//div[@class='itemAttr']//td[@class='attrLabels']")
+        values = context.browser.find_elements_by_xpath(
+            "div[@class='itemAttr']//td[@class='attrLabels']/following-sibling::td[.//*[text()]]")
+        per_item_spec = dict(zip(labels, values))
+        print(per_item_spec)
+
+        for k, v in desired_specs.items():
+            if per_item_spec[k] != v and v not in per_item_spec[k]:
+                mismatches.append(title)
+                break
+
+        context.browser.close()
+        context.browser.switch_to.window(current_window)
+
+    if mismatches:
+        raise ValueError(f"This item are not related")
+
+
+def act_spec(keys):
+    return {key.text.strip(":"): key.find_element_by_xpath("following-sibling::td[.//*[text()]]").text for key in keys}
+
+
+def exp_spec(context):
+    return {row['Filter']: row['Value'] for row in context.table.rows}
+
+
+def suspicious_items(items, expected_labels):
+    list_items = []
+
+    for title, link in items:
+        for label in expected_labels:
+            if label.lower() not in title.lower():
+                list_items.append((title, link))
+                break
+
+    return list_items
+
+
+def item_link_and_title(context):
+    items = context.browser.find_elements_by_xpath("//li[starts-with(@class, 's-item      ')][parent::ul[contains(@class, 'srp-results')]]")
+
+    pairs = []
+    for item in items:
+        pairs.append((item.find_element_by_xpath("descendant::h3").text,
+                      item.find_element_by_xpath("descendant::a").get_attribute("href")))
+
+    return pairs
+#     # v = {}
+#     # for head in context.table.headings:
+#     #     v[head] = None
+#     #
+#     # for row in context.table.rows:
+#     #     for i in v.keys():
+#     #         v[i] = row[i]
+#     # print(v)
+#     current_window = context.browser.current_window_handle
+#      context.browser.switch_to.window()
+#      context.browser.close()
+#     ######################################################################
+#     print(current_window)
+#     cleared_list = []
+#     for item in result_item:
+#         link = item.find_element_by_xpath("descendant::a").get_attribute("href")  # str url
+#         title = item.find_element_by_xpath("descendant::h3").text                 # str of the url
+#
+#         item_specs = (link, title)
+#         cleared_list.append(item_specs)
+#         print("1 st OK")
+#     #######################################################################
+#     for link, title in cleared_list[:2]:
+#         context.browser.execute_script(f'window.open("{link}", "_blank");')
+#         sleep(2)
+#
+#     # switch ###############################################################
+#         context.browser.switch_to.window(context.browser.window_handles[-1])
+#
+#     # validation ###########################################################
+#         if not selected_filters(context.browser, context.table.rows):
+#             fails.append((title, link))
+#     # switch and close ######################################################
+#         context.browser.close()
+#         context.browser.switch_to.window(current_window)
+#     if fails:
+#         print("Selected filters are not related", fails)
+#         print("2 st OK")
+#
+#
+# def selected_filters(browser, filters) -> bool:
+#     labels = browser.find_elements_by_xpath("//div[@class='itemAttr']//td[@class='attrLabels']")
+#     values = browser.find_elements_by_xpath("div[@class='itemAttr']//td[@class='attrLabels']/following-sibling::td[.//*[text()]]")
+#
+#     per_item_spec = dict(zip(labels, values))
+#     # print(per_item_spec)
+#     for row in filters:
+#         header = row['Filter']
+#         chbx_label = row['Value']
+#         validated_filter = match_filter(per_item_spec, header, chbx_label)
+#         if not validated_filter:
+#             return False
+#     return True
+#
+#
+# def match_filter(specs, label, values) -> bool:
+#     for label, value in specs.items():
+#         if label in label.text and label.lower() in value.text.lower():
+#             return True
+#     print(f"no filter found  related to {label} and {values} in spec info")
+#     return False
+#
+#
+# print("4 st OK")
+#
+
+# @step('Validate what all item are related to following filters')
+# def ver_filters(context, Filter, Value):
+#     current_window = context.browser.current_window_handle
+#     exp_spec = _get_exp_spec(context)
+#     wrong_items = _get_wrong_items(link_and_title(context), exp_spec.values())
+#
+#     mismathes = []
+#
+#     for title, link in wrong_items:
+#         context.browser.execute_script(f"window.open('{link}', '_blank');")
+#         context.browser.switch_to.window(context.browser.window_handles[-1])
+#
+#         act_spec = _get_act_spec(_get_spec_keys(context))
+#
+#         for k, v in exp_spec.items():
+#             if act_spec[k] != v:
+#                 mismathes.append(title)
+#                 break
+#         context.browser.close()
+#         context.browser.switch_to.window(current_window)
+#
+#     if mismathes:
+#         raise ValueError(f"This items is not related to {Filter} and {Value}")
+#
+# def _get_spec_keys(context):
+#     return context.browser.find_elements_by_xpath("div[@class-'itemAttr']//td[@class='attrLabels']")
+#
+# def _get_act_spec(keys):
+#     return {key.text.strip(":"): key.find_element_by_xpath("following-sibling::td[.//*[text()]]").text for key in keys}
+#
+# def _get_exp_spec(context):
+#     return {row['Filter']: row['Value'] for row in context.table.rows}
+#
+# def _get_wrong_items(items, exp_labels):
+#     list_items = []
+#
+#     for title, link in items:
+#         for label in exp_labels:
+#             if label.lower() not in title.lower():
+#                 list_items.append((title, link))
+#                 break
+#     return list_items
+#
+# def _get_filter_pairs(context):
+#     result_item = context.browser.find_elements_by_xpath("//li[contains(@class,'s-item      ')]")
+#
+#     cleared_list = []
+#
+#     for item in result_item:
+#         cleared_list.append((item.find_element_by_xpath("descendant::h3").text, item.find_element_by_xpath("descendant::a").get_attribute("href")))
+#
+#     return cleared_list
